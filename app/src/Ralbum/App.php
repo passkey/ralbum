@@ -561,14 +561,15 @@ class App
             '相机品牌' => $metadata->getMake(),
             '相机型号' => $metadata->getModel(),
             '镜头型号' => $metadata->getLens(),
-            '拍摄日期' => $metadata->getDateTaken(),
+            '拍摄日期' => $metadata->getDateTaken('Y-m-d H:i:s'),
             '快门速度' => $metadata->getFormattedShutterSpeed($metadata->getShutterSpeed()),
             '光圈' => $metadata->getFormattedAperture($metadata->getAperture()),
             'ISO' => $metadata->getIso(),
             '焦距' => $metadata->getFormattedFocalLength($metadata->getFocalLength()),
             'GPS' => $metadata->getGpsData(),
             '曝光度' => trim($metadata->getExposureMode() . ', ' . $metadata->getExposureProgram(), ', '),
-            '文件日期' => $metadata->getDateFile(),
+            '修改日期' => $metadata->getLastModificationDate('Y-m-d H:i:s'),
+            '文件日期' => $metadata->getFileDate('Y-m-d H:i:s'),
             '原始文件大小' => $metadata->getFileSize(),
             '原始尺寸' => $metadata->getHeight() > 0 && $metadata->getWidth() > 0 ? $metadata->getHeight() . ' x ' . $metadata->getWidth() : false
         ];
