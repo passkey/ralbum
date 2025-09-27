@@ -11,17 +11,16 @@
 	<div id="search" {% if q|length > 0 %} class="search_active"{% endif %}>
 		<form method="GET" action="{{ base_url_ralbum }}/search">
 			<span class="search_options_open {% if filter_active %} filter_active{% endif %}"><span>&#9776;</span></span>
-			<input type="text" id="q" name="q" placeholder="Search for images ..." value="{{ q }}" {% if q|length > 0 %} class="search_active"{% endif %}/>
-			<input type="submit" id="submitbutton" name="submitbutton" value="Search" />
+			<input type="text" id="q" name="q" placeholder="搜索图片..." value="{{ q }}" {% if q|length > 0 %} class="search_active"{% endif %}/>
+			<input type="submit" id="submitbutton" name="submitbutton" value="搜索" />
 			<div id="search_options">
 				<div class="search_option">
 					<input type="checkbox" id="limit_to_keyword_search" name="limit_to_keyword_search" {% if limit_to_keyword_search %}checked="checked"{% endif %}/>
-					<label for="limit_to_keyword_search">Limit text-search by keyword</label>
+					<label for="limit_to_keyword_search">按关键字限制文本搜索</label>
 				</div>
-				<h3>Equipment</h3>
 				<div class="search_option">
 					<select name="camera">
-						<option value=""> - camera - </option>
+						<option value=""> - 相机型号 - </option>
 						{% for key, cam in unique_cams %}
 							<option value="{{ key }}" {% if camera == key %}selected="selected"{% endif %} >{{ cam }}</option>
 						{% endfor %}
@@ -29,55 +28,37 @@
 				</div>
 				<div class="search_option">
 					<select name="lens">
-						<option value=""> - lens - </option>
+						<option value=""> - 镜头型号 - </option>
 						{% for key, lns in unique_lenses %}
 							<option value="{{ key }}" {% if lens == key %}selected="selected"{% endif %} >{{ lns }}</option>
 						{% endfor %}
 					</select>
 				</div>
-				<h3>Date</h3>
 				<div class="search_option">
 					<select name="year" class="date">
-						<option value=""> - year - </option>
+						<option value=""> - 年份 - </option>
 						{% for key, yr in years %}
 							<option value="{{ key }}" {% if year == key %}selected="selected"{% endif %} >{{ yr }}</option>
 						{% endfor %}
 					</select>
 					<select name="month" class="date">
-						<option value=""> - month - </option>
+						<option value=""> - 月份 - </option>
 						{% for key, mnth in months %}
 							<option value="{{ key }}" {% if month == key %}selected="selected"{% endif %} >{{ mnth }}</option>
 						{% endfor %}
 					</select>
 					<select name="day" class="date">
-						<option value=""> - day - </option>
+						<option value=""> - 日期 - </option>
 						{% for key, dy in days %}
 							<option value="{{ key }}" {% if day == key %}selected="selected"{% endif %} >{{ dy }}</option>
 						{% endfor %}
 					</select>
 				</div>
-				<h3>Season</h3>
-				<select name="season">
-					<option value=""> - season - </option>
-					<option value="summer" {% if season == "summer" %}selected="selected"{% endif %}>Summer</option>
-					<option value="autumn" {% if season == "autumn" %}selected="selected"{% endif %}>Autumn</option>
-					<option value="winter" {% if season == "winter" %}selected="selected"{% endif %}>Winter</option>
-					<option value="spring" {% if season == "spring" %}selected="selected"{% endif %}>Spring</option>
-				</select>
-				<h3>Time of day</h3>
-				<select name="daytime">
-					<option value=""> - time of day - </option>
-					<option value="morning" {% if daytime == "morning" %}selected="selected"{% endif %}>Morning</option>
-					<option value="afternoon" {% if daytime == "afternoon" %}selected="selected"{% endif %}>Afternoon</option>
-					<option value="evening" {% if daytime == "evening" %}selected="selected"{% endif %}>Evening</option>
-					<option value="night" {% if daytime == "night" %}selected="selected"{% endif %}>Night</option>
-				</select>
-				<h3>Other ways of searching</h3>
-				<div class="feature-links">
-					<a href="{{ base_url_ralbum }}/map_view" class="feature-button">Search for images on a map</a>
-					<br />
-					<a href="{{ base_url_ralbum }}/stats" class="feature-button">Find images based on stats</a>
+                <!--
+				<div class="search_option">
+					<a href="{{ base_url_ralbum }}/map_view">Search for images on a map</a>
 				</div>
+                -->
 			</div>
 		</form>
 	</div>

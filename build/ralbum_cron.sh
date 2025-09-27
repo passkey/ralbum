@@ -1,2 +1,2 @@
-#!/bin/bash
-/usr/bin/sudo -u www-data /usr/local/bin/php /var/www/html/cron.php
+#!/bin/sh
+/bin/su -s /bin/sh apache -c "/usr/bin/php /var/www/cron.php"

@@ -10,7 +10,6 @@ class Metadata
     public function __construct($path)
     {
         if (file_exists($path)) {
-
             $this->exif = @exif_read_data($path);
 
             @getimagesize($path, $info);
@@ -67,9 +66,9 @@ class Metadata
     public function getExposureMode()
     {
         $modes = [
-            0 => 'Auto exposure',
-            1 => 'Manual exposure',
-            2 => 'Auto bracket',
+            0 => '自动曝光',
+            1 => '手动曝光',
+            2 => '自动包围曝光',
         ];
         if (isset($this->exif['ExposureMode']) && isset($modes[$this->exif['ExposureMode']])) {
             return $modes[$this->exif['ExposureMode']];
@@ -80,14 +79,14 @@ class Metadata
     public function getExposureProgram()
     {
         $programs = [
-            1 => 'Manual',
-            2 => 'Normal program',
-            3 => 'Aperture priority',
-            4 => 'Shutter priority',
-            5 => 'Creative program',
-            6 => 'Action program',
-            7 => 'Portrait mode',
-            8 => 'Landscape mode',
+            1 => '手动',
+            2 => '标准程序',
+            3 => '光圈优先',
+            4 => '快门优先',
+            5 => '艺术创作',
+            6 => '活动拍摄',
+            7 => '人像模式',
+            8 => '风景模式',
         ];
         if (isset($this->exif['ExposureProgram']) && isset($programs[$this->exif['ExposureProgram']])) {
             return $programs[$this->exif['ExposureProgram']];
@@ -257,38 +256,32 @@ class Metadata
         return false;
     }
 
-
-    public function getDateValue($field, $format = null)
+    public function getDateTaken()
     {
-        if (isset($this->exif[$field]) && strlen($this->exif[$field]) > 10) {
-            $timestamp = strtotime($this->exif[$field]);
-            if ($format) {
-                return date($format, $timestamp);
-            }
-            return $timestamp;
+        if (isset($this->exif['DateTimeOriginal'])) {
+            return strtotime($this->exif['DateTimeOriginal']);
         }
         return false;
     }
 
-    public function getDateTaken($format = null)
+    public function getDateFile()
     {
-        return $this->getDateValue('DateTimeOriginal', $format);
-    }
+        $date1 = 0;
+        if (isset($this->exif['FileDateTime']) && $this->exif['FileDateTime'] > 0) {
+            $date1 = $this->exif['FileDateTime'];
 
-    public function getLastModificationDate($format = null)
-    {
-        return $this->getDateValue('DateTime', $format);
-    }
-
-    public function getFileDate($format = null)
-    {
-        $field = 'FileDateTime';
-        if (isset($this->exif[$field]) && strlen($this->exif[$field]) > 7) {
-            if ($format) {
-                return date($format, $this->exif[$field]);
-            }
-            return $this->exif[$field];
         }
+        $date2 = 0;
+        if (isset($this->exif['DateTime'])) {
+            $date2 = strtotime($this->exif['DateTime']);
+        }
+
+        $date = max($date1, $date2);
+
+        if ($date > 0) {
+            return $date;
+        }
+
         return false;
     }
 
@@ -323,6 +316,9 @@ class Metadata
 
         if (count($parts) == 1)
             return $parts[0];
+
+        if (floatval($parts[1]) == 0)
+            return 0;
 
         return floatval($parts[0]) / floatval($parts[1]);
     }

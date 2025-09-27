@@ -7,7 +7,7 @@
 	<div id="navigation">
 		<div class="folders">
 			{% if folder_up is defined %}
-				<a class="folder up" title="Parent folder" href="{{ folder_up.url }}"> <img width="16" height="16" src="{{ base_url }}/assets/images/svg/prev.svg" alt="Parent folder"/></a>
+				<a class="folder up" title="回到上一级目录" href="{{ folder_up.url }}"> <img width="16" height="16" src="{{ base_url }}/assets/images/svg/prev.svg" alt="回到上一级目录"/></a>
 			{% endif %}
 
 			{% for folder in folders %}
@@ -16,7 +16,7 @@
 		</div>
 		<div class="other-files">
 			{% if other_files|length > 0 %}
-				<p class="other-file-header">Files in this folder</p>
+				<p class="other-file-header">其他文件</p>
 				<div class="other-files">
 					{% for other_file in other_files %}
 						<div class="other-file">
@@ -38,16 +38,16 @@
 		{% if images|length > 0 %}
 			<div id="tools" style="width:100%">
 				<div id="folder_info">
-					{{ images|length}} image{% if images|length != 1%}s{% endif %}
+					{{ images|length}}张图片{% if images|length != 1%}{% endif %}
 				</div>
 				<div id="sort_button">
-					Sort 	↓↑
+					排列顺序 ↓↑
 				</div>
 				<div id="sort_links">
-					<a href="?order=filename&direction=asc" {% if session.order=="filename" and session.direction=="asc" %}class="active"{% endif %}>Filename A-Z</a>
-					<a href="?order=filename&direction=desc" {% if session.order=="filename" and session.direction=="desc" %}class="active"{% endif %}>Filename Z-A</a>
-					<a href="?order=date_taken&direction=asc" {% if session.order=="date_taken" and session.direction=="asc" %}class="active"{% endif %}>Newest first</a>
-					<a href="?order=date_taken&direction=desc" {% if session.order=="date_taken" and session.direction=="desc" %}class="active"{% endif %}>Oldest first</a>
+					<a href="?order=filename&direction=asc" {% if session.order=="filename" and session.direction=="asc" %}class="active"{% endif %}>按文件名A-Z</a>
+					<a href="?order=filename&direction=desc" {% if session.order=="filename" and session.direction=="desc" %}class="active"{% endif %}>按文件名Z-A</a>
+					<a href="?order=date_taken&direction=asc" {% if session.order=="date_taken" and session.direction=="asc" %}class="active"{% endif %}>按时间从新到旧</a>
+					<a href="?order=date_taken&direction=desc" {% if session.order=="date_taken" and session.direction=="desc" %}class="active"{% endif %}>按时间从旧到新</a>
 				</div>
 			</div>
 		
@@ -59,14 +59,14 @@
 		{% else %}
 
 			{% if latest_images|length > 0 %}
-				<h1>Latest images</h1>
+				<h1>最新图片</h1>
 				{% embed "images.twig" with {'images': latest_images} %}
 				{% endembed %}
 			{% endif %}
 
 			{% if on_this_day|length > 0 %}
 				<div id="this_day" class="home_section">
-					<h1>On this day</h1>
+					<h1>本日</h1>
 
 					{% for year,yearImages in on_this_day %}
 						<div class="this_day_year">
@@ -78,23 +78,9 @@
 				</div>
 			{% endif %}
 
-			{% if from_this_week|length > 0 %}
-				<div id="this_day" class="home_section">
-					<h1>This week in</h1>
-
-					{% for year,yearImages in from_this_week %}
-						<div class="this_day_year">
-							<h2>{{ year }}</h2>
-							{% embed "images.twig" with {'images': yearImages, 'source' : 'on_this_day'} %}
-							{% endembed %}
-						</div>
-					{% endfor %}
-				</div>
-			{% endif %}
-
 			{% if random_images|length > 0 %}
 				<div id="random_images" class="home_section">
-					<h1>Random images</h1>
+					<h1>随机</h1>
 					{% embed "images.twig" with {'images': random_images} %}
 					{% endembed %}
 				</div>	

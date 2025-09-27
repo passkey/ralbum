@@ -1,18 +1,12 @@
 # Use an official PHP runtime as a parent image
-FROM php:8.2-apache
-
-# Install mod_rewrite for Apache
-RUN a2enmod rewrite
+FROM passkey/php:8.2-alpine-apache2
+LABEL maintainer="gengwh <8505569@qq.com>" version="1.0"
 
 # Set the working directory in the container
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Install PHP extensions and other dependencies
-RUN apt-get update \
-	&& apt-get install -y libzip-dev zip git libmagickwand-dev vim sudo \
-	&& pecl install imagick \
-	&& docker-php-ext-enable imagick \
-	&& docker-php-ext-install exif 
+# Install other dependencies
+RUN apk --no-cache add git php82-pecl-imagick && ln -s /usr/bin/php82 /usr/bin/php
 
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
@@ -20,21 +14,26 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
     && php -r "unlink('composer-setup.php');" \
     && mv composer.phar /usr/local/bin/composer
 
-# Install Ralbum 
-RUN cd /var/www/html && git clone https://github.com/ralbum/ralbum.git .
-RUN cd /var/www/html/app && /usr/local/bin/composer install
+# Install Ralbum
+RUN rm -rf /var/www/* && cd /var/www && git clone https://github.com/passkey/ralbum.git .
+RUN cd /var/www/app && /usr/local/bin/composer install
+
+# Cleanup unnecessary files
+RUN apk del git \
+    && rm /usr/local/bin/composer \
+    && rm -rf /var/www/.git* \
+    && rm -rf /var/www/build \
+    && rm /var/www/ralbum.jpg \
+    && rm /var/www/COPYING \
+    && rm /var/www/README.md
 
 # Set permissions for cache and data
-RUN chmod 775 /var/www/html/cache
-RUN chmod 775 /var/www/html/data
-RUN chown www-data:www-data /var/www/html/cache
-RUN chown www-data:www-data /var/www/html/data
+RUN chmod 775 /var/www/cache
+RUN chmod 775 /var/www/data
+RUN chown apache:apache /var/www/cache
+RUN chown apache:apache /var/www/data
 
 COPY ralbum_cron.sh .
 
 # Expose the port Apache listens on
 EXPOSE 80
-
-# Start Apache when the container runs
-CMD ["apache2-foreground"]
-

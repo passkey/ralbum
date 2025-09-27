@@ -11,7 +11,7 @@ class App
     protected $setting;
     protected $parts;
 
-    protected $actions = ['list', 'detail', 'original', 'update_thumbnail', 'search', 'info', 'rotate', 'video_stream', 'map_view', 'stats'];
+    protected $actions = ['list', 'detail', 'original', 'update_thumbnail', 'search', 'info', 'rotate', 'video_stream', 'map_view'];
 
     public function __construct()
     {
@@ -56,8 +56,7 @@ class App
     public function loadTemplate()
     {
         $loader = new \Twig\Loader\FilesystemLoader([BASE_DIR . '/app/src/Ralbum/Views']);
-        $twig = new \Twig\Environment($loader, ['debug' => true]);
-        $twig->addExtension(new \Twig\Extension\DebugExtension());
+        $twig = new \Twig\Environment($loader);
         $twig->addGlobal('base_url', BASE_URL);
         $twig->addGlobal('base_url_ralbum', BASE_URL_RALBUM);
         $twig->addGlobal('full_size', $_SESSION['full-size']);
@@ -118,9 +117,6 @@ class App
             case 'map_view':
                 $this->renderMap();
                 break;
-            case 'stats':
-                $this->renderStats();
-                break;
 
         }
     }
@@ -141,28 +137,7 @@ class App
         $search = new Search();
         $images = $search->getImagesWithGeo();
 
-        foreach ($images as $key => $image) {
-            $images[$key]['file_original'] = BASE_URL_RALBUM . '/original'. $image['file_path'];
-            $folders = explode('/', trim($image['file_path'], '/'));
-            array_pop($folders);
-            $images[$key]['folders'] = $folders;
-        }
-
-        $variables =  ['images' => json_encode($images)] + $this->getDefaultListVariables($search) + ['mode' => 'map'];
-
-        echo $this->twig->render('map.twig', $variables);
-    }
-
-    public function renderStats()
-    {
-        $variables = [];
-
-        if (Search::isSupported()) {
-            $search = new Search();
-            $variables = $search->getStats() + $this->getDefaultListVariables($search);
-        }
-
-        echo $this->twig->render('stats.twig', $variables);
+        echo $this->twig->render('map.twig', ['images' => $images]);
     }
 
     public function renderDetail()
@@ -404,18 +379,14 @@ class App
         $pagination->currentPage = $this->getPage();
         $pagination->itemsPerPage = $imagesPerPage;
 
-        $latestImages = $onThisDay = $dataStats = $thisWeek = [];
+        $latestImages = $onThisDay = $dataStats = [];
 
         $randomImages = [];
 
         if (count($images) == 0 && count($this->parts) == 0 && Search::isSupported()) {
             $search = new \Ralbum\Search();
             $latestImages = $search->getLatestImages();
-            if (isset($_GET['weekmode']) || Setting::get('view_mode_earlier_years') == 'week') {
-                $thisWeek = $search->getFromThisWeek();
-            } else {
-                $onThisDay = $search->getOnThisDay();
-            }
+            $onThisDay = $search->getOnThisDay();
             $randomImages = $search->getRandom();
             $dataStats['index_count'] = $search->getIndexCount();
         }
@@ -430,7 +401,6 @@ class App
             'pagination' => $pagination,
             'latest_images' => $latestImages,
             'on_this_day' => $onThisDay,
-            'from_this_week' => $thisWeek,
             'random_images' => $randomImages,
             'data_stats' => $dataStats,
             'session' => $_SESSION
@@ -521,7 +491,7 @@ class App
 
         $variables = $variables + $this->getDefaultListVariables($search);
 
-        $forwardRequestParameters = ['q', 'limit_to_keyword_search', 'camera', 'lens', 'year', 'month', 'day', 'season', 'daytime'];
+        $forwardRequestParameters = ['q', 'limit_to_keyword_search', 'camera', 'lens', 'year', 'month', 'day'];
 
         foreach ($forwardRequestParameters as $parameter) {
             $variables[$parameter] = isset($_REQUEST[$parameter]) ? $_REQUEST[$parameter] : false;
@@ -531,7 +501,7 @@ class App
 
     }
 
-    public function getDefaultListVariables(Search $search)
+    public function getDefaultListVariables($search)
     {
         $years = range(2000, date('Y'));
         $months = range(1,12);
@@ -584,31 +554,23 @@ class App
         $response = [
             'result' => true,
             'file' => trim($file->getFolderName(), '/') . '/' . $file->getName(),
-            'filename' => $file->getName(),
-            'folders' => explode('/', trim($file->getFolderName(), '/'))
         ];
 
-        if (isset($_GET['raw'])) {
-            echo '<pre>';
-            var_dump($metadata->getRawExifData()); die();
-        }
-
         $data = [
-            'Keywords' => $metadata->getKeywords(),
-            'Camera Make' => $metadata->getMake(),
-            'Camera Model' => $metadata->getModel(),
-            'Lens' => $metadata->getLens(),
-            'Date taken' => $metadata->getDateTaken('d-m-Y H:i'),
-            'Shutterspeed' => $metadata->getFormattedShutterSpeed($metadata->getShutterSpeed()),
-            'Aperture' => $metadata->getFormattedAperture($metadata->getAperture()),
+            '关键词' => $metadata->getKeywords(),
+            '相机品牌' => $metadata->getMake(),
+            '相机型号' => $metadata->getModel(),
+            '镜头型号' => $metadata->getLens(),
+            '拍摄日期' => $metadata->getDateTaken(),
+            '快门速度' => $metadata->getFormattedShutterSpeed($metadata->getShutterSpeed()),
+            '光圈' => $metadata->getFormattedAperture($metadata->getAperture()),
             'ISO' => $metadata->getIso(),
-            'Focal Length' => $metadata->getFormattedFocalLength($metadata->getFocalLength()),
+            '焦距' => $metadata->getFormattedFocalLength($metadata->getFocalLength()),
             'GPS' => $metadata->getGpsData(),
-            'Exposure' => trim($metadata->getExposureMode() . ', ' . $metadata->getExposureProgram(), ', '),
-            'Modification date' => $metadata->getLastModificationDate('d-m-Y H:i'),
-            'File date' => $metadata->getFileDate('d-m-Y H:i'),
-            'Orignal File Size' => $metadata->getFileSize(),
-            'Original dimensions' => $metadata->getHeight() > 0 && $metadata->getWidth() > 0 ? $metadata->getHeight() . ' x ' . $metadata->getWidth() : false
+            '曝光度' => trim($metadata->getExposureMode() . ', ' . $metadata->getExposureProgram(), ', '),
+            '文件日期' => $metadata->getDateFile(),
+            '原始文件大小' => $metadata->getFileSize(),
+            '原始尺寸' => $metadata->getHeight() > 0 && $metadata->getWidth() > 0 ? $metadata->getHeight() . ' x ' . $metadata->getWidth() : false
         ];
 
         $response['data'] = $data;

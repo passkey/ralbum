@@ -7,6 +7,7 @@ use Ralbum\Model\Image;
 class Search
 {
     protected $index = [];
+    protected $indexFile = null;
     protected $db = null;
 
     public $filters = [
@@ -22,36 +23,35 @@ class Search
         return class_exists('SQLite3');
     }
 
-    function __construct()
+    function __construct($indexFile = null)
     {
         $this->db = new \SQLite3(BASE_DIR . '/data/database.db');
         $this->createTable();
+
+        if (isset($_GET['debug_database'])) {
+            echo '<pre>';
+            $statement = $this->db->prepare('SELECT *, datetime(date_taken) FROM files LIMIT 1000');
+            $result = $statement->execute();
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+                var_dump($row);
+            }
+            die();
+        }
     }
 
-    public function createTable()
+    function createTable()
     {
         $this->db->exec('CREATE TABLE IF NOT EXISTS files (file_path STRING, file_name STRING, keywords STRING, file_type STRING, date_taken DATETIME, make STRING, model STRING, aperture DOUBLE, shutterspeed DOUBLE, iso INT, focal_length DOUBLE, lens STRING, lat DOUBLE, long DOUBLE)');
         $this->db->exec('CREATE INDEX IF NOT EXISTS file_type_name on files(file_type)');
     }
 
-    public function resetIndex()
+    function resetIndex()
     {
         $this->db->query('DROP TABLE files');
         $this->createTable();
-        $this->db->busyTimeout(5000);
     }
 
-    public function begintTransaction()
-    {
-        $this->db->exec('BEGIN TRANSACTION');
-    }
-
-    public function commitTransaction()
-    {
-        $this->db->exec('COMMIT');
-    }
-
-    public function setEntry($key, $filename, $type, $metadata = [])
+    function setEntry($key, $filename, $type, $metadata = [])
     {
         $dataKeys = [
             'file_path',
@@ -86,9 +86,9 @@ class Search
             if (!in_array($val, ['file_path', 'file_name', 'file_type'])) {
                 if (isset($metadata[$val])) {
                     if (is_array($metadata[$val])) {
-                        $metadata[$val] = implode(',', $metadata[$val]);
+                        $metadata[$val] = implode(' ', $metadata[$val]);
                     }
-                    $statement->bindValue(':'. $val, $this->replaceDiacritics($metadata[$val]));
+                    $statement->bindValue(':'. $val, $metadata[$val]);
                 }
             }
         }
@@ -100,8 +100,6 @@ class Search
     {
         $filters = array_keys($this->filters);
         $filters[] = 'limit_to_keyword_search';
-        $filters[] = 'season';
-        $filters[] = 'daytime';
 
         foreach ($filters as $filter) {
             if (isset($_REQUEST[$filter]) && strlen($_REQUEST[$filter]) > 0) {
@@ -111,12 +109,12 @@ class Search
         return false;
     }
 
-    public function search($q)
+    function search($q)
     {
         $results = [];
 
         $words = explode(' ', trim($q));
-        $words = array_filter($words, 'strlen');
+        $words = array_filter($words,'strlen');
 
         $query = 'SELECT * FROM files WHERE 1=1 ';
 
@@ -125,13 +123,8 @@ class Search
             $keywordSearches = [];
             $filenameSearches = [];
             foreach ($words as $i => $word) {
-                if (substr($word, 0, 1) == '-') {
-                    $keywordSearches[] = ' keywords NOT LIKE :word' . $i . ' ';
-                    $filenameSearches[] = ' file_name NOT LIKE :word' . $i . ' ';
-                } else {
-                    $keywordSearches[] = ' keywords LIKE :word' . $i . ' ';
-                    $filenameSearches[] = ' file_name LIKE :word' . $i . ' ';
-                }
+                $keywordSearches[] = ' keywords LIKE :word' . $i . ' ';
+                $filenameSearches[] = ' file_name LIKE :word' . $i . ' ';
             }
 
             if (isset($_REQUEST['limit_to_keyword_search'])) {
@@ -139,7 +132,6 @@ class Search
             } else {
                 $query .= ' AND ( (' . implode(' AND ', $filenameSearches) . ') OR ( '. implode(' AND ', $keywordSearches) . ')) ';
             }
-
         }
 
         foreach ($this->filters as $requestParam => $filter) {
@@ -149,6 +141,7 @@ class Search
                 }
             }
         }
+
 
         if (isset($_REQUEST['year']) && strlen($_REQUEST['year']) > 0) {
             $query .= ' AND strftime("%Y", date_taken) = "' . (int)$_REQUEST['year'] . '" ';
@@ -160,50 +153,22 @@ class Search
             $query .= ' AND strftime("%d", date_taken) = "' . str_pad((int)$_REQUEST['day'], 2, '0', STR_PAD_LEFT) . '" ';
         }
 
-        if (isset($_REQUEST['season']) && strlen($_REQUEST['season']) > 0) {
-            switch ($_REQUEST['season']) {
-                case 'summer':
-                    $query .= ' AND strftime("%m", date_taken) IN ("06","07","08") ';
-                break;
-                case 'winter';
-                    $query .= ' AND strftime("%m", date_taken) IN ("12","01","02") ';
-                break;
-                case 'spring';
-                    $query .= ' AND strftime("%m", date_taken) IN ("03","04","05") ';
-                break;
-                case 'autumn':
-                    $query .= ' AND strftime("%m", date_taken) IN ("09","10","11") ';
-                    break;
-            }
-        }
+        // var_dump($query); die();
 
-        if (isset($_REQUEST['daytime']) && strlen($_REQUEST['daytime']) > 0) {
-            switch ($_REQUEST['daytime']) {
-                case 'morning':
-                    $query .= ' AND strftime("%H", date_taken) IN ("06","07","08","09","10","11") ';
-                    break;
-                case 'afternoon':
-                    $query .= ' AND strftime("%H", date_taken) IN ("12","13","14","15","16","17") ';
-                    break;
-                case 'evening':
-                    $query .= ' AND strftime("%H", date_taken) IN ("18","19","20","21","22","23") ';
-                    break;
-                case 'night':
-                    $query .= ' AND strftime("%H", date_taken) IN ("00","01","02","03","04","05") ';
-                    break;
-            }
-        }
-
+//        $perPage = 100;
+//        $page = max(1, isset($_REQUEST['page']) ? intval($_REQUEST['page']) : 1);
+//        $offset = ($page-1)*$perPage;
+//        $query .= ' ORDER BY date_taken DESC LIMIT ' . $perPage . ' OFFSET ' . $offset;
         $query .= ' ORDER BY date_taken DESC';
         $statement = $this->db->prepare($query);
 
+//        var_dump($query); die();
+//        var_dump($this->db->lastErrorMsg());
+//        die();
+
         if (count($words) > 0) {
             foreach ($words as $i => $word) {
-                if (substr($word, 0, 1) == '-') {
-                    $statement->bindValue(':word' . $i, '%' . $this->replaceDiacritics(substr($word, 1)) . '%');
-                } else {
-                    $statement->bindValue(':word' . $i, '%' . $this->replaceDiacritics($word) . '%');
-                }
+                $statement->bindValue(':word' . $i, '%' . $word . '%');
             }
         }
 
@@ -225,17 +190,17 @@ class Search
 
     }
 
-    public function replaceDiacritics($string)
+    function replaceDiacritics($string)
     {
         if (function_exists('iconv')) {
-            return iconv('UTF-8', 'ASCII//TRANSLIT', $string);
+            return @iconv('UTF-8', 'ASCII//TRANSLIT', $string);
         }
 
         return $string;
 
     }
 
-    public function getIndexCount()
+    function getIndexCount()
     {
         $statement = $this->db->prepare('SELECT count(*) FROM files');
         $result = $statement->execute();
@@ -244,7 +209,27 @@ class Search
         }
     }
 
-    public function getLatestImages()
+//    function sortByDateTaken($a, $b)
+//    {
+//        if (!isset($a['metadata']) || !isset($a['metadata']['date_taken'])) {
+//            return 0;
+//        }
+//
+//        if (!isset($b['metadata']) || !isset($b['metadata']['date_taken'])) {
+//            return 0;
+//        }
+//
+//        $dateA = $a['metadata']['date_taken'];
+//        $dateB = $b['metadata']['date_taken'];
+//
+//        if ($dateA == $dateB) {
+//            return 0;
+//        }
+//
+//        return $dateA > $dateB ? -1 : 1;
+//    }
+
+    function getLatestImages()
     {
         $limit = \Ralbum\Setting::get('latest_images_count');
 
@@ -258,96 +243,25 @@ class Search
 
     }
 
-    public function getImageCount()
+    function getPopularKeywords()
     {
-        $statement = $this->db->prepare('SELECT count(file_path) as file_count FROM files');
+        $statement = $this->db->prepare('SELECT count(*) FROM files');
         $result = $statement->execute();
-
         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            return $row['file_count'];
+            return $row;
         }
-    }
-
-    public function getStats()
-    {
-        $statement = $this->db->prepare('SELECT * FROM files');
-        $result = $statement->execute();
-
-        $keywords = [];
-        $folders = [];
-        $count = 0;
-        $keywordCount = 0;
-        $withoutKeywords = 0;
-        $imagesWithKeywords = 0;
-
-        while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-
-            $count++;
-
-            if (substr_count($row['file_path'], '/') >= 2) {
-                $folder = substr($row['file_path'], 1, strpos($row['file_path'], '/', 1));
-                if ($folder) {
-                    if (isset($folders[$folder])) {
-                        $folders[$folder]++;
-                    } else {
-                        $folders[$folder] = 1;
-                    }
-                }
-            }
-
-            $thisKeywords = explode(',', $row['keywords']);
-            $thisKeywords = array_filter($thisKeywords, 'strlen');
-
-            if (count($thisKeywords) == 0) {
-                $withoutKeywords++;
-            } else {
-                $imagesWithKeywords++;
-                foreach ($thisKeywords as $thisKeyword) {
-                    $keywordCount++;
-                    if (isset($keywords[$thisKeyword])) {
-                        $keywords[$thisKeyword]++;
-                    } else {
-                        $keywords[$thisKeyword] = 1;
-                    }
-                }
-            }
-
-
-        }
-
-        arsort($keywords);
-
-        return [
-            'keywords' => $keywords,
-            'folders' => $folders,
-            'count' => $count,
-            'keyword_count' => $keywordCount,
-            'without_keywords' => $withoutKeywords,
-            'average_number_keywords' => round($imagesWithKeywords > 0 ? ($keywordCount/$imagesWithKeywords) : 0, 3)
-        ];
     }
 
     function getOnThisDay()
     {
-        $statement = $this->db->prepare('SELECT * FROM files WHERE file_type = "Ralbum\Model\Image" AND strftime("%m-%d", date_taken) = strftime("%m-%d", "now") ORDER BY date_taken DESC');
+        $month = date('m');
+        $day = date('d');
+        $statement = $this->db->prepare('SELECT * FROM files WHERE file_type = "Ralbum\Model\Image" AND date(date_taken) LIKE "%-' . $month . '-' . $day . '" ORDER BY date_taken DESC LIMIT 50');
         $result = $statement->execute();
-        return $this->groupImages($result);
-    }
-
-    function getFromThisWeek()
-    {
-        $statement = $this->db->prepare('SELECT * FROM files WHERE file_type = "Ralbum\Model\Image" AND strftime("%W", date_taken) = strftime("%W", "NOW") ORDER BY date_taken DESC');
-        $result = $statement->execute();
-        return $this->groupImages($result);
-    }
-
-    function groupImages($result)
-    {
         $images = [];
-        $baseDir = \Ralbum\Setting::get('image_base_dir');
         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
             $year = substr($row['date_taken'], 0, 4);
-            $image = new Image($baseDir . $row['file_path']);
+            $image = new Image($row['file_path']);
             if (file_exists($image->getDetailPath()) && file_exists($image->getThumbnailPath())) {
                 $images[$year][] = $image;
             }
@@ -424,7 +338,7 @@ class Search
         $statement = $this->db->prepare('SELECT * FROM files WHERE length(lat) > 0');
         $result = $statement->execute();
         while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-            $images[] = $row;
+            $images[$row['file_name']] = $row;
         }
 
         return $images;

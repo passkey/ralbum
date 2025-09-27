@@ -1,92 +1,82 @@
-Ralbum
+Ralbum汉化精简版
 ===================
 
-## What does this do?
-It generates a list of folders and images (and other files) as they exist on the filesystem.
-When browsing the images they will be displayed in a light-box and can be browsed using buttons, 
-swipe actions on smart-phones and with the keys of your keyboard. The original files will only be
-read, no write actions are performed on the original files. For all images a smaller version of the 
-image will be generated (on the fly or preferably using cron.php).
+## 概述
+
+### 汉化说明
+- 本项目是对[Ralbum]的汉化和精简，去掉了国内无法使用的地图，其他功能无影响。
+- Docker镜像基于alpine重新封装，体积仅91.8MB，相比原版镜像916MB减少90%。
+- 非常轻量，适合部署在电视盒子、树莓派等轻量级NAS上。
+- 原项目地址：https://github.com/ralbum/ralbum.git
+- 仅供个人学习和使用，请勿用于商业用途。
+
+### 功能简述
+生成文件系统上存在的文件夹和图像（以及其他文件）的列表。
+当浏览图像时，它们将显示在图册中， 支持智能设备上的滑动操作和键盘按键。
+原始文件仅支持读取，不能对原始文件执行任何写入操作。
+对于全部图像，最好使用缩略图以加速浏览（访问触发生成或使用定时cron.php）。
 
 ![ralbum](ralbum.jpg)
 
-## Features
+## 功能
 
-### Image viewing
-You can choose to browse the original images or view a re-sized version of the images (default). 
-This is convenient when you are browsing on a slow connection. 
-You can control the size of these images in settings.json. 
-These images are created on the fly or you can use the cron.php to create these (and the thumbnails) all at once.
-If you leave the main folder of your images empty, you will see a list of recent images and a list of images of the same date in history and a list of random images.
+### 图像浏览
+可以选择浏览原始图像（默认）或查看重新调整大小的图像版本。
+当在网速比较慢的情况下，适合使用重新调整大小的图像版本。
+可以在`settings.json`中调整图像的大小的参数配置。
+另外，缩略图是首次访问即时触发创建的，也可以使用cron.php一次创建这些图像（和缩略图）。
+在图像根目录是空的情况下，首页将会展示最近图像列表、历史中同一日期的图像列表和随机图像列表。
 
-### Search
-You can search (if you have cron enabled, see below) for images using the search box on the top right. You can enter multiple words to further
-narrow the results.
+### 搜索图像
+您可以使用右上角的搜索框搜索图像。您可以输入多个关键词以进一步缩小结果范围。
 
-### Map
-Images with geographical information embedded in the EXIF can be displayed on a map. Open the the submenu of the search function to locate the link to the map.
+## 安装
+>支持使用Docker安装，也可以自行在LAMP环境上安装配置。推荐使用Docker方式使用，比较方便。
 
-## Installation
-
-You can install this using Docker or on your base system, Docker is the easiest way because you won't have to check for certain software compatibility. You _do_ need to install Docker of course.
-
-### Installation using Docker
+### 使用Docker安装
 ```
-docker pull ralbum/ralbum
+docker pull passkey/ralbum:1.0-alpine
 ```
 
-You can then run this command to run ralbum, replace '/var/www/testfoto' with the image directory on your server. The two other volumes (the lines with the `-v`) are optional but they make it easier to upgrade to a new version later (without having to rebuild the cache and index). Make sure your docker instance has write access to the cache and data folder.
+拉取镜像后，运行下面的命令来运行ralbum，替换`/xxx/photo_source`为原始图像的目录，`/xxx/live`为缓存和数据目录，可以自定义路径。确保Docker实例对缓存和数据文件夹具有写入权限。
 
 ```
-/usr/bin/docker run --name ralbum_live \
-        -v /var/www/testfoto:/var/data \
-        -v /var/ralbum/cache/live:/var/www/html/cache \
-        -v /var/ralbum/data/live:/var/www/html/data \
-        -d -p 1247:80 ralbum/ralbum
+docker run --restart=always \
+        --name ralbum_live \
+        -v /xxx/photo_source:/var/data \
+        -v /xxx/live:/var/www/cache \
+        -v /xxx/live:/var/www/data \
+        -d -p 1247:80 passkey/ralbum:1.0-alpine
 ```
 
-If you have your docker container running you can use that as-is but it's better to have that running on it's on own host/domain (and without the port number), here is the relevant apache configuration for your VirtualHost, again, replace the portnumber if you wish.
+如果Docker容器已运行，可以通过`http://服务器IP:1247`来访问Ralbum。
+
+```
+http://127.0.0.1:1247/
+```
+
+使用计划任务每天运行一次cron.php来启用搜索功能，建议在宿主机上运行cronjob，命令如下：
 
 ```bash
-ProxyPass / http://127.0.0.1:1247/
-ProxyPassReverse / http://127.0.0.1:1247/
+docker exec ralbum_live /var/www/ralbum_cron.sh
 ```
 
-Of course you can also set this up using nginx. I don't have an example ready but if you run nginx you probably know how to do this.
+## 在基础系统上安装
 
-If you want to use the search feature you need to run a cronjob. Running the cron from inside a docker container sucks, it's easier to do this from the host system like so.
+### 环境要求
+* PHP 8.0及更高版本
+* 带mod_rewrite或Apache或Nginx（Debian自带的轻量级nginx即可）
+* PHP的GD库，但最好是使用Imagick扩展（系统上安装的ImageMagick依赖）
+* SQLite3，这是可选的（用于搜索功能），通常随PHP一起提供
 
-```bash
-/usr/bin/docker exec ralbum_live /var/www/html/ralbum_cron.sh
-```
-
-That's it for the installation, if you want to you can also build it yourself using:
-The `build` folder contains a Dockerfile, instructions for installing:
-Enter the `build` directory on the command-line and execute the command below to create the `ralbum` image:
-
-```bash
-docker build --no-cache -t ralbum .
-```
-
-
-## Installation on your base system
-
-### Requirements
-* PHP 7.0 and up
-* Apache with mod_rewrite or nginx (nginx-light on Debian should suffice)
-* Either PHP's GD library but preferably the Imagick extension (and ImageMagick installed)
-* SQLite, this is optional (for search feature and dashboard), usually comes with PHP
-
-### Procedure
-* Copy the contents in your DocumentRoot, this can also be a sub-folder
-* Install composer (if you haven't done so already). Get it from [https://getcomposer.org/](https://getcomposer.org/) or use your system's package management
+### 实施步骤
+* 复制内容到DocumentRoot
+* 安装composer。可通过[https://getcomposer.org/](https://getcomposer.org/)下载或使用系统的包管理工具安装
 * `cd app`; `composer install`; `cd ..`;
-* Edit `settings.json` and set `image_base_dir` to the directory where your images are located
-* Set permissions to the 'cache' and 'data' folder so your webserver user can write to it
-* Done
+* 编辑`settings.json `并将`image_base_dir`修改为图像所在的目录
+* 设置`cache`和`data`目录权限，Web服务器用户需要有读写权限
 
-To use the search feature you need to run the cron.php file to generate the index (on a daily basis for example). You should run this command
-as the webserver user, for example:
+如果要使用搜索功能，您需要运行cron.php文件来生成索引。建议使用计划任务每天运行一次。
 ```bash
 sudo -u www-data php cron.php
 ```

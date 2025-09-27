@@ -205,11 +205,6 @@ div.this_day_year {
 	margin-left: -4px;
 }
 
-#search #search_options h3 {
-	margin: 0;
-	padding: 10px 0 4px;
-}
-
 #search_activate {
 	background-size : auto 100%;
 	position : absolute;
@@ -292,28 +287,13 @@ div.this_day_year {
 }
 
 #search select {
-	width: 100%;
-	max-width: 250px;
+	width: 240px;
 	padding: 2px;
 }
 
 #search select.date {
 	width: 78px;
 	padding: 2px;
-}
-
-div.feature-links {
-	padding: 6px;
-	border-radius: 2px;
-	background: #222;
-	width: 99%;
-}
-
-div.feature-links a {
-	display: block;
-		width: 100%;
-	border-radius: 2px;
-	text-indent: 4px;
 }
 
 #navigation {
@@ -378,10 +358,6 @@ a.folder.up:hover {
 
 a.folder.up img {
 	vertical-align : middle;
-}
-
-a.keyword-link {
-	padding-right: 8px;
 }
 
 div.other-files {
@@ -454,11 +430,7 @@ a.image {
 	border-radius: 5px;
 	padding: 4px;
 	text-align: center;
-}
-
-a.image.today {
-	background-color: #175cc4;
-}
+	}
 
 a.image img {
 	width: 100%;
@@ -590,17 +562,16 @@ a.image img {
 
 
 #info {
-	overflow-y: scroll;
-	overflow-x: hidden;
-	display: none;
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
-	z-index: 21;
-	height: 70%; /* Pas dit eventueel aan */
-	width: 80%; /* Iets breder gemaakt */
-	background: #222;
+	overflow-y : scroll;
+	overflow-x : hidden;
+	display : none;
+	position : absolute;
+	right : 0;
+	top : 0;
+	z-index : 21;
+	height : 100%;
+	width : 72%;
+	background : #222;
 	border: 1px solid #111;
 	border-top: none;
 }
@@ -623,101 +594,22 @@ a.image img {
 	background-size : auto 100%;
 }
 
-#info table {
+#info table, #map_image_info table {
 	border-collapse : collapse;
 	width : 100%;
 }
 
-#info table tr th {
+#info table tr th, #map_image_info tr th {
 	padding : 10px;
 	text-align : left;
 }
 
-#info table tr td {
+#info table tr td, #map_image_info tr td {
 	border-top : 1px solid #111;
 	padding : 10px;
 }
 
-#info table tr:nth-child(odd) {
-	background : #333;
-}
-
-#map {
-	height: 800px;
-	width: 100%;
-}
-
-.leaflet-popup-content {
-	width: 500px;
-	max-width: 100% !important;
-	padding: 0;
-	position: relative;
-}
-
-.popup-img-container {
-	display: block;
-	width: 100%;
-	height: auto;
-	position: relative;
-	margin-bottom: 10px;
-}
-
-.popup-img {
-	max-width: 100%;
-	max-height: 400px;
-	width: auto;
-	height: auto;
-	display: block;
-	margin: 0 auto;
-	object-fit: contain;
-}
-
-.popup-content {
-	text-align: center;
-}
-
-.popup-folders {
-	margin-top: 10px;
-	text-align: left;
-}
-
-.popup-keywords {
-	margin-top: 10px;
-	text-align: left;
-}
-
-.popup-googlemaps {
-	margin-top: 10px;
-	text-align: left;
-}
-
-.popup-folders a {
-	color: blue;
-	text-decoration: underline;
-}
-
-.stats_section {
-	width: 49%;
-	padding: 0 1%;
-	float: left;
-}
-
-table.stats_table {
-	border-collapse : collapse;
-	width : 100%;
-}
-
-table.stats_table tr th {
-	padding : 10px;
-	text-align : left;
-}
-
-table.stats_table tr td {
-	border-top : 1px solid #111;
-	padding : 10px;
-}
-
-table.stats_table tr:nth-child(odd) {
+#info table tr:nth-child(odd) , #map_image_info tr:nth-child(odd) {
 	background : #333;
 }
 
@@ -843,14 +735,6 @@ a.play-link {
 		line-height : 40px;
 		height : 40px;
 		font-size: 1.2em;
-	}
-
-	.leaflet-popup-content {
-		width: 250px;
-	}
-
-	#map {
-		height: 400px;
 	}
 
 }

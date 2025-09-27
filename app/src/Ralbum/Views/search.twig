@@ -11,9 +11,9 @@
 			<p class="search-count">Found&nbsp;{{ total_nr_images }} image{% if images|length != 1 %}s{% endif %}</p>
 		{% else %}
 			<p class="search-count">
-				No images found
+				未找到图片
 				{% if index_count == 0 %}
-					Check if cron is enabled.
+					，请检查cron是否正确运行。
 				{% endif %}
 			</p>
 		{% endif %}

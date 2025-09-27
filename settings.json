@@ -3,8 +3,8 @@
     "thumbnail_width": 200,
     "thumbnail_height": 130,
     "detail_width": 1024,
-    "full_size_by_default": false,
-    "order_by_date_taken": true,
+    "full_size_by_default": true,
+    "order_by_date_taken": false,
     "auto_rotate": true,
     "supported_extensions": [
         "jpg",

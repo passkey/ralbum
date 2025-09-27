@@ -2,27 +2,21 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="nl" xml:lang="nl">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>Photos</title>
+	<title>图册</title>
 	<meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=yes" />
 	<script src="{{ base_url }}/assets/js/jquery-3.5.0.min.js"></script>
 	<script type="text/javascript" src="{{ base_url }}/assets/js/jquery.touchSwipe.js"></script>
 	<link rel="stylesheet" href="{{ base_url }}/assets/css/style.css?v={{ version_ts }}">
 	<script type="text/javascript" src="{{ base_url }}/assets/js/app.js?v={{ version_ts }}"></script>
-	<link rel="icon" type="image/png" href="{{ base_url }}/assets/images/favicon/favicon-96x96.png" sizes="96x96" />
-	<link rel="icon" type="image/svg+xml" href="{{ base_url }}/assets/images/favicon/favicon.svg" />
-	<link rel="shortcut icon" href="{{ base_url }}/assets/images/favicon/favicon.ico" />
-	<link rel="apple-touch-icon" sizes="180x180" href="{{ base_url }}/assets/images/favicon/apple-touch-icon.png" />
-	<link rel="manifest" href="{{ base_url }}/assets/images/favicon/site.webmanifest" />
+	<link rel="apple-touch-icon" sizes="180x180" href="{{ base_url }}/assets/images/favicon/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="{{ base_url }}/assets/images/favicon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="{{ base_url }}/assets/images/favicon/favicon-16x16.png">
 </head>
 <body id="body">
-	{% if mode == "map" %}
-		<div id="page_map">
-	{% else %}
-		<div id="page">
-	{% endif %}
+	<div id="page">
+		{% block content %}
+		{% endblock %}
 
-	{% block content %}
-	{% endblock %}
 	</div>
 	<script type="text/javascript">
 		window.appRoot = "{{ base_url }}";
@@ -33,21 +27,21 @@
 
 		<div id="container">
 			<div id="image-nav">
-				<div id="image-nav-size" title="Change size" {% if full_size %} class="active" {% endif %}>
+				<div id="image-nav-size" title="调整大小" {% if full_size %} class="active" {% endif %}>
 				</div>
-				<div id="image-nav-info" title="Information">
+				<div id="image-nav-info" title="图片信息">
 				</div>
-				<div id="image-nav-rotate" title="Rotate the image, use CTRL/CMD click to rotate counter clockwise">
+				<div id="image-nav-rotate" title="旋转图片，按CTRL/CMD键点击可以逆时针旋转">
 				</div>
-				<div id="image-nav-prev" title="Previous image">
+				<div id="image-nav-prev" title="前一张">
 				</div>
-				<div id="image-nav-next" title="Next image">
+				<div id="image-nav-next" title="后一张">
 				</div>
-				<div id="image-nav-close" title="Close">
+				<div id="image-nav-close" title="关闭">
 				</div>
 			</div>
 			<div id="slider">
-				<img src="{{ base_url }}/assets/images/loading.gif" alt="Loading" />
+				<img src="{{ base_url }}/assets/images/loading.gif" alt="加载中..." />
 			</div>
 			<div id="info">
 				<div id="info_close"></div>
@@ -59,7 +53,7 @@
 	</div>
 	<div id="video_overlay" style="display: none;">
 		<div id="video-nav">
-			<div id="video-nav-close" title="Close">
+			<div id="video-nav-close" title="关闭">
 			</div>
 		</div>
 		<div id="video_overlay_container">

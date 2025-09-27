@@ -95,57 +95,34 @@ $(document).ready(function()
 
             if (result.result == true) {
                 var responseHtml = $('<table/>');
-                let fileNameText = '';
-
-                if (result.folders && result.folders.length > 0) {
-                    let url = window.appRoot;
-                    for (i = 0; i < result.folders.length; i++) {
-                        url += '/' + result.folders[i];
-                        fileNameText += '<a href="' + url + '">' + result.folders[i] + '</a> ' + ' / ';
-                    }
-                }
-                fileNameText += result.filename;
-                responseHtml.append('<tr><td>File</td><td>' + fileNameText + '</td></tr>');
+                responseHtml.append('<tr><td>文件</td><td>' + result.file + '</td></tr>');
 
                 var data = result.data;
 
                 if (data) {
-                    $.each(data, function(key, val) {
+                    $.each(data, function(key, val)
+                    {
                         var items = [];
 
-                        // if (key.indexOf('Date') !== -1 && val != false) {
-                        //     dateObj = new Date(val * 1000);
-                        //     val = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString();
-                        // }
+                        if (key.indexOf('Date') !== -1 && val != false) {
+                            dateObj = new Date(val * 1000);
+                            val = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString();
+                        }
 
                         if (key.indexOf('GPS') !== -1 && val != false && val.length > 0) {
                             val = '<a target="_blank" href="https://maps.google.nl/?q=' + val.join(', ') +'">' + val.join(', ') +'</a>'
                         }
 
-                        if (key.indexOf('Keywords') !== -1 && val != false && val.length > 0) {
-
-                            let newVal = '';
-                            let url = window.appRootRalbum + '/search?q=';
-                            val.forEach(function(keyword){
-                                newVal += '<a class="keyword-link" href="' + url + keyword + '">' + keyword + '</a>';
-                            })
-
-                            val = newVal;
+                        if (key.indexOf('关键词') !== -1 && val != false && val.length > 0) {
+                            val = val.join(', ');
                         }
 
-                        if (key.indexOf('File Size') !== -1 && val > 0) {
+                        if (key.indexOf('原始文件大小') !== -1 && val > 0) {
                             val = bytesToSize(val);
                         }
 
-                        if (key == "Raw Metadata") {
-                            items.push('<td>' + key + '</td>');
-                            items.push('<td>' + val + '</td>');
-                        } else {
-                            items.push('<td>' + key + '</td>');
-                            items.push('<td>' + (val == false ? '' : val) + '</td>');
-                        }
-
-
+                        items.push('<td>' + key + '</td>');
+                        items.push('<td>' + (val == false ? '' : val) + '</td>');
                         responseHtml.append($('<tr/>', {html: items.join('')}));
                     });
 
@@ -163,7 +140,8 @@ $(document).ready(function()
 
             $('#info').show();
 
-        }).fail(function(){
+        }).fail(function()
+        {
             console.log('Request for fetching info failed');
         });
 
@@ -322,11 +300,6 @@ $(document).ready(function()
 
     $(document).keydown(function(e)
     {
-        // check if gallery is open
-        if (!$('#overlay').is(':visible')) {
-            return;
-        }
-
         switch (e.which) {
             case 37: // left
                 showPreviousImage();
